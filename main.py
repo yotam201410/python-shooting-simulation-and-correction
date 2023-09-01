@@ -1,4 +1,4 @@
-from visouliser import visualization
+from visualizer import visualization
 from controller import XboxController
 from Constants import Constants
 import time
