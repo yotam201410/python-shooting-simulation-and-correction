@@ -39,7 +39,7 @@ class XboxController(object):
         y1 = self.LeftJoystickY
         x2 = self.RightJoystickX
         y2 = self.RightJoystickY
-        return [x1, y1,x2,y2 ]
+        return [x1, y1,x2,y2 ,self.X]
 
 
     def _monitor_controller(self):

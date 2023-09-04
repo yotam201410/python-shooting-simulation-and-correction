@@ -6,8 +6,7 @@ from Constants import Constants
 
 class visualization:
     def __init__(self):
-        self.vis = meshcat.Visualizer()
-        self.vis.open()
+        self.vis= meshcat.Visualizer().open()
         self.n = 0
         self.robot_location = np.array([0, 0, 0])  # robot position
         self.robot_rotation = 0  # robot angle in radians
@@ -30,9 +29,10 @@ class visualization:
                 :rtype: None
 
         """
-        ball = meshcat.geometry.Sphere(0.2413)
+        ball = meshcat.geometry.Sphere(Constants.ball_radius)
         self.vis[f'ball{self.n}'].set_object(ball)
         self.n += 1
+        return self.n-1
 
     def set_box_position(self, pos: np.ndarray):
         """
@@ -61,3 +61,4 @@ class visualization:
         :param pos: the ball position in meters
         """
         self.vis[f'ball{ID}'].set_transform(meshcat.transformations.translation_matrix(pos))
+   
