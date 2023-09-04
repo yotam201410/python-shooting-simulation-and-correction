@@ -3,6 +3,7 @@ import meshcat
 
 from ball import Ball
 from physical_ball import PhysicalBall
+from target import Target
 from visualizer import visualization
 from controller import XboxController
 from Constants import Constants
@@ -63,15 +64,20 @@ async def shoot():
     before = controller.read()
     while True:
         controls = controller.read()
+        controls = correct_drift(controller.read())
         if controls[4] == 1 and before[4] == 0:
             ball = Ball(Constants.ball_mass, Constants.ball_radius,
                         Constants.drag_constant, Constants.estimation_resolution)
-            pball = PhysicalBall(ball, vis, np.array(
-                [0.0, 29.5813518729, 29.5813518729]))
-            loop.create_task(pball.run())
+            target = Target(np.array([0.0,4.0,2.7178]),np.array([1,1.22-ball.get_target_threshold(),0.05]),90,45,999,-999)
+            results = ball.binary_smart_optimize_runge_kutta(target,45,0,5000,1500,12,ball.state.position,ball.state.velocity)
+            print(results)
+            # pball = PhysicalBall(ball, vis, np.array(
+            #     [0.0, 0, 0]+ np.array([-controls[1], controls[0], 0])* Constants.max_velocity))
+            # loop.create_task(pball.run())
+            # pball = PhysicalBall(pball, vis, np.array([0.0,0.0,0.0]))
 
         before = controls
-        await asyncio.sleep(0.1)
-loop.create_task(robot_movement())
+        # await asyncio.sleep(0.1)
+# loop.create_task(robot_movement())
 loop.create_task(shoot())
 loop.run_forever()

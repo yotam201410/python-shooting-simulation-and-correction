@@ -13,9 +13,8 @@ from state import State
 class Ball(PhysicalObject, ABC):
     def __init__(self,mass: float, radius: float, drag_constant: float,
                  estimation_resolution: float):
-        super().__init__(State(), mass, State(), estimation_resolution)
+        super().__init__(State(), mass, State(), estimation_resolution,radius)
         self.lift_coefficient = 0
-        self.radius = radius
         self.drag_constant = drag_constant
         self.cross_section_area = radius**2 * math.pi
         self.moment_of_inertia = mass * radius ** 2

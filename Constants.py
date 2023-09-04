@@ -1,5 +1,5 @@
 import numpy as np
-
+import math
 
 class Constants:
     estimation_resolution = 0.01
@@ -16,3 +16,9 @@ class Constants:
     max_rotational_velocity = 360.0
     density_of_air = 1.1839
     joystick_drift_threshold = 0.1
+    top_wheel_radius = 0.0762
+    top_circumference = top_wheel_radius * 2 * math.pi
+    bottom_wheel_radius = 0.0762
+    bottom_circumference = bottom_wheel_radius * 2 * math.pi
+    rpm_resolution = 50.0
+    angle_resolution =1
