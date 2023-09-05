@@ -10,7 +10,7 @@ class Segment:
         self.LX = lx
         self.LY = ly
         self.CX = cx
-        self.cy = cy
+        self.CY = cy
 
 
 class Target:
@@ -57,8 +57,7 @@ class Target:
             segment.LY = segment.CY
             segment.CX = states[i].position[1]
             segment.CY = states[i].position[2]
-            angle_deg = - \
-                math.degrees(math.atan2(
+            angle_deg = -math.degrees(math.atan2(
                     segment.CY - segment.LY, segment.CX - segment.LX))
             velocity = util.get_vector_magnitude(
                 np.array[(segment.CX - segment.LX, segment.CY - segment.LY)])
@@ -76,15 +75,15 @@ class Target:
         y_max = self.z_pos + (self.z_size / 2.0)
         y_min = self.z_pos - (self.z_size / 2.0)
         for i in range(len(states)):
+            print(states[i])
             segment.LX = segment.CX
             segment.LY = segment.CY
-            segment.CX = states[i].position[1]
-            segment.CY = states[i].position[2]
-            angle_deg = - \
-                math.degrees(math.atan2(
-                    segment.CY - segment.LY, segment.CX - segment.LX))
+            segment.CX = float(states[i].position[1])
+            segment.CY = float(states[i].position[2])
+            angle_deg = -math.degrees(math.atan2(segment.CY - segment.LY, segment.CX - segment.LX))
             velocity = util.get_vector_magnitude(
-                np.array[(segment.CX - segment.LX, segment.CY - segment.LY)])
+                np.array([segment.CX - segment.LX, segment.CY - segment.LY]))
+            # print(angle_deg,velocity)
             if angle_deg >= self.minimum_entry_angle and angle_deg <= self.maximum_entry_angle:
                     if velocity >= self.minimum_entry_velocity and velocity <= self.maximum_entry_velocity:
                         return ((segment.LX + segment.CX) / 2.0) - self.y_pos

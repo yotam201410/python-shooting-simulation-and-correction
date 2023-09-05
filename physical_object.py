@@ -48,16 +48,9 @@ class PhysicalObject(ABC):
         pass
 
     def simulate_object(self) -> List[State]:
-        positions_array = []
         states_array = [State(self.state)]
         while self.state.position[2] > 0:
-            before_state = State(self.state)
-            self.calc_forces()
-            self.calc()
-            self.runge_kutta_approximation(before_state)
-            positions_array.append(self.state.position)
-            self.before_before_state = State(before_state)
-            states_array.append(State(self.state))
+            states_array.append(self.simulate_object_step())
         return states_array
 
     def simulate_object_step(self):
@@ -66,7 +59,7 @@ class PhysicalObject(ABC):
         self.calc()
         self.runge_kutta_approximation(before_state)
         self.before_before_state = State(before_state)
-        return self.state
+        return State(self.state)
 
     def differential_equation(self, time: float, last_state: State) -> List[np.ndarray]:
         return [last_state.velocity, last_state.acceleration,
@@ -96,15 +89,16 @@ class PhysicalObject(ABC):
                             bottom_rps * Constants.bottom_circumference) / 2
         angle_rad = math.radians(angle)
         top_rads = top_rpm * 2 * math.pi/60
-        bottom_rads = top_rpm * 2 * math.pi/60
+        bottom_rads = bottom_rpm * 2 * math.pi/60
         velocity_vector = np.array([0, muzzele_velocity * math.sin(
             angle_rad), muzzele_velocity*math.cos(angle_rad)]+starting_velocity)
         rotational_velocity_vector = np.array(
-            [top_rads * Constants.top_wheel_radius - bottom_rads * Constants.bottom_wheel_radius/(2*self.radius), 0, 0])
+            [bottom_rads * Constants.bottom_wheel_radius-top_rads * Constants.top_wheel_radius /(2*self.radius), 0., 0.])
         self.state.position = start_position
         self.state.velocity = velocity_vector
         self.state.rotational_velocity = rotational_velocity_vector
         states = self.simulate_object()
+        print([str(x.position) for x in states], end = "\n\n\n\n")
         return target.check(states)
 
     def full_distance_check(self, target: Target, angle: float, rpm: float, ratio: float, start_position: np.ndarray, starting_velocity: np.ndarray):
@@ -116,11 +110,12 @@ class PhysicalObject(ABC):
                             bottom_rps * Constants.bottom_circumference) / 2
         angle_rad = math.radians(angle)
         top_rads = top_rpm * 2 * math.pi/60
-        bottom_rads = top_rpm * 2 * math.pi/60
+        bottom_rads = bottom_rpm * 2 * math.pi/60
         velocity_vector = np.array([0, muzzele_velocity * math.sin(
             angle_rad), muzzele_velocity*math.cos(angle_rad)]+starting_velocity)
+        # print(velocity_vector)
         rotational_velocity_vector = np.array(
-            [top_rads * Constants.top_wheel_radius - bottom_rads * Constants.bottom_wheel_radius/(2*self.radius), 0, 0])
+            [bottom_rads * Constants.bottom_wheel_radius-top_rads * Constants.top_wheel_radius /(2*self.radius), 0., 0.])
         self.state.position = start_position
         self.state.velocity = velocity_vector
         self.state.rotational_velocity = rotational_velocity_vector
@@ -135,7 +130,7 @@ class PhysicalObject(ABC):
         initial_rotation_ratio = 0.0
         current_rotation_ratio = initial_rotation_ratio
         initial_rpm = max_rpm
-        rpm_increment = Constants.rpm_resolution
+        rpm_increment = -Constants.rpm_resolution
         current_rpm = initial_rpm
         if max_hub_distance > 0:
             current_rotation_ratio = min(
@@ -175,7 +170,7 @@ class PhysicalObject(ABC):
             print(attempts)
         print(time.time()-start)
         return best_top_rpm, best_bottom_rpm, best_angle
-
+    
     def get_target_threshold(self):
         tolerance = 0.1
         return self.radius * 4 + tolerance

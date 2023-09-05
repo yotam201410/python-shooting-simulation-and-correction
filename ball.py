@@ -31,7 +31,7 @@ class Ball(PhysicalObject, ABC):
         self.add_force(Constants.gravitational_acceleration_matrix*self.mass)
         self.add_force(
             -1 * velocity_direction * 0.5 * self.drag_constant * Constants.density_of_air * self.cross_section_area *(velocity_magnitude **2))
-        if util.get_vector_magnitude(self.state.rotational_velocity) > 0:
+        if abs(util.get_vector_magnitude(self.state.rotational_velocity)) > 0:
             axis_of_rotation = util.get_vector_direction(self.state.rotational_velocity)
             self.add_force(np.cross(velocity_direction,
-                                    axis_of_rotation) * 0.5 * self.lift_coefficient * Constants.density_of_air * velocity_magnitude ** 2)
+                                    axis_of_rotation) * 0.5 * self.lift_coefficient * Constants.density_of_air *self.cross_section_area* (velocity_magnitude ** 2))

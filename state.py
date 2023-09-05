@@ -15,13 +15,13 @@ class State:
         self.rotational_acceleration = np.array([0.0, 0.0, 0.0])
         self.jerk = np.array([0.0, 0.0, 0.0])
         if state is not None:
-            self.position = state.position
-            self.velocity = state.velocity
-            self.acceleration = state.acceleration
-            self.sigma_forces = state.sigma_forces
-            self.rotational_acceleration = state.rotational_acceleration
-            self.rotational_velocity = state.rotational_velocity
-            self.jerk = state.jerk
+            self.position = np.array(state.position)
+            self.velocity = np.array(state.velocity)
+            self.acceleration = np.array(state.acceleration)
+            self.sigma_forces = np.array(state.sigma_forces)
+            self.rotational_acceleration = np.array(state.rotational_acceleration)
+            self.rotational_velocity = np.array(state.rotational_velocity)
+            self.jerk = np.array(state.jerk)
 
     def add_vector(self, vector_list: List[np.ndarray]) -> State:
         return_state = State(self)
