@@ -23,7 +23,7 @@ class visualization:
         box = meshcat.geometry.Box(Constants.robot_dimensions)
         self.vis["box"].set_object(box)
 
-    def create_ball(self):
+    def create_ball(self)->int:
         """
         creates a ball and gives it an index
                 :rtype: None

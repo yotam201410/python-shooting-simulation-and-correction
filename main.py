@@ -63,7 +63,6 @@ async def shoot():
     global dt, vis, controller
     before = controller.read()
     while True:
-        controls = controller.read()
         controls = correct_drift(controller.read())
         if controls[4] == 1 and before[4] == 0:
             ball = Ball(Constants.ball_mass, Constants.ball_radius,

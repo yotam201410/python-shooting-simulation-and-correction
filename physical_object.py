@@ -15,19 +15,20 @@ from target import Target
 def multiple_list(vector_list: List[np.ndarray], number: float) -> List[np.ndarray]:
     return_list = []
     for vector in vector_list:
-        return_list.append(vector*number)
+        return_list.append(vector * number)
     return return_list
 
 
 def add_list(vector_list: List[np.ndarray], vector_list2: List[np.ndarray]) -> List[np.ndarray]:
     return_list = []
     for vector1, vector2 in zip(vector_list, vector_list2):
-        return_list.append(vector1+vector2)
+        return_list.append(vector1 + vector2)
     return return_list
 
 
 class PhysicalObject(ABC):
-    def __init__(self, state: State, mass: float, before_before_state: State, estimation_resolution: float, radius: float):
+    def __init__(self, state: State, mass: float, before_before_state: State, estimation_resolution: float,
+                 radius: float):
         self.state = state
         self.before_before_state = before_before_state
         self.estimation_resolution = estimation_resolution
@@ -66,7 +67,6 @@ class PhysicalObject(ABC):
                 last_state.acceleration - (self.before_before_state.acceleration * time)]
 
     def runge_kutta_approximation(self, before_state: State):
-        # state = [before_state.position, before_state.velocity, before_state.acceleration]
         a = self.differential_equation(0, before_state)
         b = self.differential_equation(self.estimation_resolution * 0.5,
                                        before_state.add_vector(multiple_list(a, self.estimation_resolution * 0.5)))
@@ -75,54 +75,49 @@ class PhysicalObject(ABC):
         d = self.differential_equation(self.estimation_resolution,
                                        before_state.add_vector(multiple_list(c, self.estimation_resolution)))
         _sum = multiple_list(add_list(a, add_list(b, add_list(
-            b, add_list(c, add_list(c, d))))), self.estimation_resolution/6.0)
+            b, add_list(c, add_list(c, d))))), self.estimation_resolution / 6.0)
         self.state.position += _sum[0]
         self.state.velocity += _sum[1]
         self.state.acceleration += _sum[2]
 
-    def full_check(self, target: Target, angle: float, rpm: float, ratio: float, start_position: np.ndarray, starting_velocity: np.ndarray):
-        top_rpm = rpm * (ratio - 1)if rpm > 0 else rpm
-        bottom_rpm = rpm * (1-ratio) if ratio < 0.0 else rpm
-        top_rps = top_rpm/60
-        bottom_rps = bottom_rpm/60
+    def prepare_shot(self, start_position: np.ndarray, starting_velocity: np.ndarray, angle: float, bottom_rpm: float,
+                     top_rpm: float):
+        top_rps = top_rpm / 60
+        bottom_rps = bottom_rpm / 60
         muzzele_velocity = (top_rps * Constants.top_circumference +
                             bottom_rps * Constants.bottom_circumference) / 2
         angle_rad = math.radians(angle)
-        top_rads = top_rpm * 2 * math.pi/60
-        bottom_rads = bottom_rpm * 2 * math.pi/60
+        top_rads = top_rpm * 2 * math.pi / 60
+        bottom_rads = bottom_rpm * 2 * math.pi / 60
         velocity_vector = np.array([0, muzzele_velocity * math.sin(
-            angle_rad), muzzele_velocity*math.cos(angle_rad)]+starting_velocity)
+            angle_rad), muzzele_velocity * math.cos(angle_rad)] + starting_velocity)
         rotational_velocity_vector = np.array(
-            [bottom_rads * Constants.bottom_wheel_radius-top_rads * Constants.top_wheel_radius /(2*self.radius), 0., 0.])
+            [bottom_rads * Constants.bottom_wheel_radius - top_rads * Constants.top_wheel_radius / (2 * self.radius),
+             0., 0.])
         self.state.position = start_position
         self.state.velocity = velocity_vector
         self.state.rotational_velocity = rotational_velocity_vector
+
+    def full_check(self, target: Target, angle: float, rpm: float, ratio: float, start_position: np.ndarray,
+                   starting_velocity: np.ndarray):
+        top_rpm = rpm * (ratio - 1) if rpm > 0 else rpm
+        bottom_rpm = rpm * (1 - ratio) if ratio < 0.0 else rpm
+        self.prepare_shot(start_position, starting_velocity, angle, bottom_rpm, top_rpm)
         states = self.simulate_object()
-        print([str(x.position) for x in states], end = "\n\n\n\n")
+        print([str(x.position) for x in states], end="\n\n\n\n")
         return target.check(states)
 
-    def full_distance_check(self, target: Target, angle: float, rpm: float, ratio: float, start_position: np.ndarray, starting_velocity: np.ndarray):
-        top_rpm = rpm * (ratio - 1)if rpm > 0 else rpm
-        bottom_rpm = rpm * (1-ratio) if ratio < 0.0 else rpm
-        top_rps = top_rpm/60
-        bottom_rps = bottom_rpm/60
-        muzzele_velocity = (top_rps * Constants.top_circumference +
-                            bottom_rps * Constants.bottom_circumference) / 2
-        angle_rad = math.radians(angle)
-        top_rads = top_rpm * 2 * math.pi/60
-        bottom_rads = bottom_rpm * 2 * math.pi/60
-        velocity_vector = np.array([0, muzzele_velocity * math.sin(
-            angle_rad), muzzele_velocity*math.cos(angle_rad)]+starting_velocity)
-        # print(velocity_vector)
-        rotational_velocity_vector = np.array(
-            [bottom_rads * Constants.bottom_wheel_radius-top_rads * Constants.top_wheel_radius /(2*self.radius), 0., 0.])
-        self.state.position = start_position
-        self.state.velocity = velocity_vector
-        self.state.rotational_velocity = rotational_velocity_vector
+    def full_distance_check(self, target: Target, angle: float, rpm: float, ratio: float, start_position: np.ndarray,
+                            starting_velocity: np.ndarray):
+        top_rpm = rpm * (ratio - 1) if rpm > 0 else rpm
+        bottom_rpm = rpm * (1 - ratio) if ratio < 0.0 else rpm
+        self.prepare_shot(start_position, starting_velocity, angle, bottom_rpm, top_rpm)
         states = self.simulate_object()
         return target.check_distance(states)
 
-    def binary_smart_optimize_runge_kutta(self, target: Target, max_angle: float, min_angle: float, max_rpm: float, min_rpm: float, max_hub_distance: float, start_position: np.ndarray, start_velocity: np.ndarray):
+    def binary_smart_optimize_runge_kutta(self, target: Target, max_angle: float, min_angle: float, max_rpm: float,
+                                          min_rpm: float, max_hub_distance: float, start_position: np.ndarray,
+                                          start_velocity: np.ndarray):
         start = time.time()
         initial_angle = max_angle
         angle_increment = - Constants.angle_resolution
@@ -134,7 +129,7 @@ class PhysicalObject(ABC):
         current_rpm = initial_rpm
         if max_hub_distance > 0:
             current_rotation_ratio = min(
-                target.y_pos/max_hub_distance, 1.0) * -1.0
+                target.y_pos / max_hub_distance, 1.0) * -1.0
         attempts = 0
         best_top_rpm = -1.0
         best_bottom_rpm = -1.0
@@ -143,34 +138,36 @@ class PhysicalObject(ABC):
         current_angle = initial_angle
         best_rpm = current_rpm
         best_angle = current_angle
-        angles = [x for x in range(max_angle, min_angle, angle_increment)]
-        while (len(angles) > 1):
-            attempts+=1
+        angles = [x for x in range(int(max_angle), int(min_angle), angle_increment)]
+        while len(angles) > 1:
+            attempts += 1
             if current_rpm <= min_rpm:
                 current_rpm = best_rpm
             fits_in_hub = False
-            while (not fits_in_hub and current_rpm > min_rpm):
+            while not fits_in_hub and current_rpm > min_rpm:
                 current_rpm += rpm_increment
                 fits_in_hub = self.full_check(
                     target, current_angle, current_rpm, current_rotation_ratio, start_position, start_velocity)
-            if (self.full_check(target, current_angle, current_rpm, current_rotation_ratio, start_position, start_velocity)):
+            if self.full_check(target, current_angle, current_rpm, current_rotation_ratio, start_position,
+                               start_velocity):
                 best_rpm = current_rpm
                 best_angle = current_angle
                 best_top_rpm = best_rpm * \
-                    (current_rotation_ratio -
-                     1) if current_rotation_ratio > 0 else best_rpm
+                               (current_rotation_ratio -
+                                1) if current_rotation_ratio > 0 else best_rpm
                 best_bottom_rpm = best_rpm * \
-                    (1-current_rotation_ratio) if current_rotation_ratio < 0 else best_rpm
+                                  (1 - current_rotation_ratio) if current_rotation_ratio < 0 else best_rpm
             else:
-                if (self.full_distance_check(target, current_angle, current_rpm, current_rotation_ratio, start_position, start_velocity) > 0):
-                    angles = angles[len(angles)/2:len(angles)]
+                if (self.full_distance_check(target, current_angle, current_rpm, current_rotation_ratio, start_position,
+                                             start_velocity) > 0):
+                    angles = angles[len(angles) / 2:len(angles)]
                 else:
-                    angles = angles[0:len(angles)/2]
-                current_angle = angles[len(angles)/2]
+                    angles = angles[0:len(angles) / 2]
+                current_angle = angles[int(len(angles) / 2)]
             print(attempts)
-        print(time.time()-start)
+        print(time.time() - start)
         return best_top_rpm, best_bottom_rpm, best_angle
-    
+
     def get_target_threshold(self):
         tolerance = 0.1
         return self.radius * 4 + tolerance
